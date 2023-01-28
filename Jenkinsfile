@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent worker
 
     stages {
         stage('Build') {
@@ -27,7 +27,10 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Executing deploy stage'
-                sshPublisher failOnError: true, publishers: [sshPublisherDesc(configName: 'webserver-oracle', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '/var/www/html', remoteDirectorySDF: false, removePrefix: 'app', sourceFiles: 'app/index.html')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)]
+                sh 'hostname'
+                sh 'whoami'
+                sh 'pwd'
+                sh 'ls -la'
             }
         }
     }
