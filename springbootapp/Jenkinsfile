@@ -1,0 +1,104 @@
+pipeline {
+    agent { label 'worker' }
+
+    environment {
+		DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        WEBSERVER_HOSTNAME = "webserver.server.cx.ua"
+        CONTAINER_NAME = "spring-webapp"
+        DOCKER_IMAGE = "13rom/spring-webapp"
+        IMAGE_TAG = "0.0.${BUILD_NUMBER}"
+	}
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'github', url: 'git@github.com:13rom/sample-webapp.git']])
+            }
+        }
+        // stage('Compile') {
+        //     steps {
+        //         echo 'Executing compile stage'
+        //         sh 'sed -i "s/%INSERT-HERE%/$(date)/" app/index.html'
+        //         sh 'sed -i "s/%BUILD-NUMBER%/${BUILD_NUMBER}-docker/" app/index.html'
+        //     }
+        // }
+        // stage('Test') {
+        //     steps {
+        //         echo 'Executing test stage'
+        //         sh '''
+        //         result=$(grep -c html app/index.html)
+        //         if [ "$result" = "2" ]; then
+        //             echo "Test passed"
+        //             exit 0
+        //         else
+        //             echo "Test failed!"
+        //             exit 1
+        //         fi
+        //         '''
+        //     }
+        // }
+
+        stage('Build Image') {
+            steps {
+                dir('springbootapp'){
+                    echo 'Executing docker image build stage'
+                    //sh 'docker build . -t 13rom/simple-webapp:0.0.${BUILD_NUMBER}'
+                    sh 'docker build -t ${DOCKER_IMAGE}:${IMAGE_TAG} .'
+                }
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                // sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) {
+                    sh "docker login -u $USERNAME -p $PASSWORD"
+                }
+            }
+        }
+
+        stage('Push') {
+			steps {
+				//sh 'docker push 13rom/simple-webapp:0.0.${BUILD_NUMBER}'
+                sh 'docker push ${DOCKER_IMAGE}:${IMAGE_TAG}'
+                // script {
+                //     docker.withRegistry( '', DOCKERHUB_CREDENTIALS ) {
+                //         dockerImage.push()
+                //     }
+                // }
+			}
+		}
+
+        stage('Deploy') {
+            steps {
+                echo 'Executing deploy stage'
+                
+                sshagent(credentials: ['webserver']) {
+                    sh '''
+                      [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
+                      ssh-keyscan -t rsa,dsa webserver.server.cx.ua >> ~/.ssh/known_hosts
+                      ssh ubuntu@webserver.server.cx.ua 'whoami && pwd'
+                    '''
+                    //sh "docker run -d --name simple-webapp -p 80:80 13rom/simple-webapp:0.0.${BUILD_NUMBER}"
+
+                    // sh "ssh ubuntu@${WEBSERVER_HOSTNAME} echo \"$DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin\""
+                    // sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker pull ${DOCKER_IMAGE}:${IMAGE_TAG}"
+                    // // sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker container stop ${CONTAINER_NAME}"
+                    // sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker container rm -f ${CONTAINER_NAME}"
+                    // sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker run -d --name ${CONTAINER_NAME} -p 80:80 ${DOCKER_IMAGE}:${IMAGE_TAG}"
+                    // sh 'docker logout'
+                }
+                //sh 'scp -i ~/.ssh/jenkins_rsa app/index.html ubuntu@webserver.server.cx.ua:/var/www/html/index.html'
+                //sshPublisher failOnError: true, publishers: [sshPublisherDesc(configName: 'webserver', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '/var/www/html', remoteDirectorySDF: false, removePrefix: 'app', sourceFiles: 'app/index.html')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)]
+            }
+        }
+    }
+
+
+	post {
+	always {
+		//sh 'rm hosts.ini'
+		sh 'docker logout'
+	}
+	}
+}
