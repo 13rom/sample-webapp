@@ -4,8 +4,8 @@ pipeline {
     environment {
 		DOCKERHUB_CREDENTIALS = credentials('dockerhub')
         WEBSERVER_HOSTNAME = "webserver.server.cx.ua"
-        CONTAINER_NAME = "spring-webapp"
-        DOCKER_IMAGE = "13rom/spring-webapp"
+        CONTAINER_NAME = "simple-webapp"
+        DOCKER_IMAGE = "13rom/simple-webapp"
         IMAGE_TAG = "0.0.${BUILD_NUMBER}"
 	}
 
