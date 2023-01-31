@@ -2,12 +2,12 @@ pipeline {
     agent { label 'worker' }
 
     environment {
-		DOCKERHUB_CREDENTIALS = credentials('dockerhub')
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub')
         WEBSERVER_HOSTNAME = "webserver.server.cx.ua"
         CONTAINER_NAME = "simple-webapp"
         DOCKER_IMAGE = "13rom/simple-webapp"
         IMAGE_TAG = "0.1.${BUILD_NUMBER}"
-	}
+    }
 
     stages {
         stage('Git Checkout') {
@@ -25,12 +25,12 @@ pipeline {
         }
 
         stage('Push Image') {
-			steps {
+            steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
                     sh "docker push ${DOCKER_IMAGE}:${IMAGE_TAG}"                }
-			}
-		}
+            }
+        }
 
         stage('Deploy') {
             steps {
@@ -56,11 +56,11 @@ pipeline {
     }
 
 
-	post {
+    post {
         always {
             echo "Cleaning up slave docker..."
             sh 'docker logout'
             sh "docker rmi ${DOCKER_IMAGE}:${IMAGE_TAG}"
         }
-	}
+    }
 }
