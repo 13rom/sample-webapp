@@ -20,7 +20,7 @@ pipeline {
             steps {
                 dir('springbootapp'){
                     script {
-                        dockerImage = docker.build DOCKER_IMAGE + "$IMAGE_TAG"
+                        dockerImage = docker.build DOCKER_IMAGE + ":$IMAGE_TAG"
                     }
                 }
             }
