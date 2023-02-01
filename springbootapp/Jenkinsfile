@@ -47,22 +47,12 @@ pipeline {
         }
 
         stage('Deploy') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-                    sshagent(credentials: ['webserver']) {
-                        sh '''
-                            [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
-                            ssh-keyscan -t rsa,dsa webserver.server.cx.ua >> ~/.ssh/known_hosts
-                            ssh ubuntu@webserver.server.cx.ua 'whoami && pwd'
-                        '''
-                        // TODO: change this to deploy.sh
-                        sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
-                        sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker pull ${DOCKER_IMAGE}:${IMAGE_TAG}"
-
-                        sh "ssh ubuntu@${WEBSERVER_HOSTNAME} \"docker container stop ${CONTAINER_NAME} || true\""
-                        sh "ssh ubuntu@${WEBSERVER_HOSTNAME} \"docker rm -f ${CONTAINER_NAME} || true\""
-                        sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker run -d --name ${CONTAINER_NAME} -p 80:8080 ${DOCKER_IMAGE}:${IMAGE_TAG}"
-                        sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker logout"
+            steps{
+                dir('ansible') {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                        sh 'cat hosts.ini'
+                        sh 'ansible -i hosts.ini all -m ping'
+                        sh 'ansible-playbook deploy.yaml --extra-vars "DOCKER_USERNAME=${DOCKER_USERNAME} DOCKER_PASSWORD=${DOCKER_PASSWORD}"'
                     }
                 }
             }

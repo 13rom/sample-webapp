@@ -1,0 +1,41 @@
+- name: Deploy docker image to webserver
+  hosts: server
+  vars:
+    image_name: 13rom/simple-webapp
+    container_name: simple-webapp
+
+  tasks:
+  - name: Log into DockerHub
+    community.docker.docker_login:
+      username: "{{ DOCKER_USERNAME }}"
+      password: "{{ DOCKER_PASSWORD }}"
+
+  - name: Pull latest image from DockerHub
+    community.docker.docker_image:
+      name: "{{ image_name }}"
+      source: pull
+      state: present
+
+  - name: Stop previous Docker container
+    community.docker.docker_container:
+      name: "{{ container_name }}"
+      state: stopped
+  
+  - name: Remove previous Docker container
+    community.docker.docker_container:
+      name: "{{ container_name }}"
+      state: absent
+
+
+  - name: Start the Docker container
+    community.docker.docker_container:
+      name: "{{ container_name }}"
+      image: "{{ image_name }}"
+      state: started
+      ports:
+        - "80:8080"
+      restart_policy: always
+
+  - name: Log out of DockerHub
+    community.docker.docker_login:
+      state: absent
