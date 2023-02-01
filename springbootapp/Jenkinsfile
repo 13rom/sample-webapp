@@ -48,7 +48,7 @@ pipeline {
 
         stage('Deploy') {
             steps{
-                dir('ansible') {
+                dir('springbootapp/ansible') {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         sh 'cat hosts.ini'
                         sh 'ansible -i hosts.ini all -m ping'
