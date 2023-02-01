@@ -1,7 +1,7 @@
 - name: Deploy docker image to webserver
   hosts: server
   vars:
-    ansible_python_interpreter: /usr/bin/python3.7
+    ansible_python_interpreter: /usr/bin/python3.8
     image_name: 13rom/simple-webapp
     container_name: simple-webapp
 
