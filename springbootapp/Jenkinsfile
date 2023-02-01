@@ -6,7 +6,7 @@ pipeline {
         WEBSERVER_HOSTNAME = "webserver.server.cx.ua"
         CONTAINER_NAME = "simple-webapp"
         DOCKER_IMAGE = "13rom/simple-webapp"
-        IMAGE_TAG = "0.1.${BUILD_NUMBER}"
+        IMAGE_TAG = "0.2.${BUILD_NUMBER}"
     }
 
     stages {
