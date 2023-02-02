@@ -6,17 +6,6 @@
     container_name: simple-webapp
 
   tasks:
-  - name: Log into DockerHub
-    community.docker.docker_login:
-      username: "{{ DOCKER_USERNAME }}"
-      password: "{{ DOCKER_PASSWORD }}"
-
-  - name: Pull latest image from DockerHub
-    community.docker.docker_image:
-      name: "{{ image_name }}"
-      source: pull
-      state: present
-
   - name: Stop previous Docker container
     community.docker.docker_container:
       name: "{{ container_name }}"
@@ -27,6 +16,23 @@
       name: "{{ container_name }}"
       state: absent
 
+  - name: Remove previous image
+    community.docker.docker_image:
+      name: "{{ image_name }}"
+      state: absent
+      force_absent: true
+  
+
+  - name: Log into DockerHub
+    community.docker.docker_login:
+      username: "{{ DOCKER_USERNAME }}"
+      password: "{{ DOCKER_PASSWORD }}"
+
+  - name: Pull latest image from DockerHub
+    community.docker.docker_image:
+      name: "{{ image_name }}"
+      source: pull
+      state: present
 
   - name: Start the Docker container
     community.docker.docker_container:
