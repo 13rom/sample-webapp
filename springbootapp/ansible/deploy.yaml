@@ -8,7 +8,7 @@
 
   tasks:
 
-  - name: Upload docker-compose.yaml file
+  - name: Stack Deploy | Upload docker-compose.yaml file
     ansible.builtin.copy:
       src: docker-compose.yaml
       dest: "{{ stack_path }}/docker-compose.yaml"
@@ -30,7 +30,7 @@
   #     force_absent: true
   
 
-  - name: Log into DockerHub
+  - name: Stack Deploy | Log into DockerHub
     community.docker.docker_login:
       username: "{{ DOCKER_USERNAME }}"
       password: "{{ DOCKER_PASSWORD }}"
@@ -50,15 +50,16 @@
   #       - "80:8080"
   #     restart_policy: always
 
-  - name: Deploy Docker Stack
+  - name: Stack Deploy | Deploy Docker Stack
     community.docker.docker_stack:
       state: present
       name: demo
+      with_registry_auth: true
       compose:
         - "{{ stack_path }}/docker-compose.yaml"
     environment:
       IMAGE: "{{ image_name }}"
 
-  - name: Log out of DockerHub
+  - name: Stack Deploy | Log out of DockerHub
     community.docker.docker_login:
       state: absent
