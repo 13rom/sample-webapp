@@ -12,6 +12,7 @@ pipeline {
     stages {
         stage('Git Checkout') {
             steps {
+                echo "================================================================================"
                 checkout scmGit(
                     branches: [[name: '*/ansible']],
                     extensions: [],
@@ -22,6 +23,7 @@ pipeline {
 
         stage('Compile') {
             steps {
+                echo "================================================================================"
                 dir('springbootapp') {
                     sh 'sed -i "s/%DATE%/$(date)/" src/main/java/com/example/demo/FinalProjectDemoApplication.java'
                     sh 'sed -i "s/%BUILD%/${BUILD_NUMBER}/" src/main/java/com/example/demo/FinalProjectDemoApplication.java'
@@ -31,6 +33,7 @@ pipeline {
 
         stage('Build Image') {
             steps {
+                echo "================================================================================"
                 dir('springbootapp'){
                     script {
                         dockerImage = docker.build DOCKER_IMAGE + ":$IMAGE_TAG"
@@ -41,6 +44,7 @@ pipeline {
 
         stage('Push Image') {
             steps {
+                echo "================================================================================"
                 script {
                     docker.withRegistry('', 'dockerhub') {
                         dockerImage.push()
@@ -52,6 +56,7 @@ pipeline {
 
         stage('Deploy') {
             steps{
+                echo "================================================================================"
                 dir('springbootapp/ansible') {
                     withCredentials([usernamePassword(
                         credentialsId: 'dockerhub',
@@ -74,9 +79,11 @@ pipeline {
 
     post {
         always {
+            echo "================================================================================"
             echo "Cleaning up slave docker..."
             sh 'docker logout'
-            sh "docker rmi ${DOCKER_IMAGE}:${IMAGE_TAG}"
+            sh "docker rmi ${DOCKER_IMAGE}"
+            // sh "docker rmi $(docker images --filter "dangling=true" -q --no-trunc)"
         }
     }
 }
