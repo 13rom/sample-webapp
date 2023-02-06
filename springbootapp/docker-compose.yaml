@@ -1,0 +1,38 @@
+# docker-compose.yaml
+# Use to deploy a container in a docker swarm stack
+# with zero-downtime.
+#
+# Usage:
+#       $ IMAGE=13rom/simple-webapp:0.2.4 docker stack deploy -c docker-compose.yaml demo --with-registry-auth
+
+version: "3.7"
+
+networks:
+  webapp-network:
+    external: false
+
+services:
+  webapp:
+    image: ${IMAGE}
+    hostname: virtual-server
+    ports:
+      - 80:8080
+    networks:
+      - webapp-network
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://localhost:8080 || exit 1"
+    deploy:
+      mode: replicated
+      replicas: 2
+      update_config:
+        order: start-first
+        failure_action: rollback
+        delay: 5s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
