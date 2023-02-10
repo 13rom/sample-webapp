@@ -5,6 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 @SpringBootApplication
 @RestController
 public class FinalProjectDemoApplication {
@@ -15,7 +18,24 @@ public class FinalProjectDemoApplication {
 	
 	@GetMapping("/")
     public String hello() {
-        return "SpringBoot Hello World! \nJenkins build #%BUILD% (%DATE%)";
+		String hostname;
+		try {
+			hostname = InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			hostname = "Unknown Host";
+		}
+
+		String html = 	"<html>" +
+						"<body>" +
+						"<h1>Demo SpringBoot Application</h1>" +
+						"<p>This page was generated and deployed using Jenkins</p>" +
+						"<p>Container hostname: " + hostname + "</p>" +
+						"<p>Build date: %DATE%</p>" +
+						"<p>Build number: %BUILD%</p>" +
+						"</body>" +
+						"</html>";
+
+        return html;
     }
 
 }
