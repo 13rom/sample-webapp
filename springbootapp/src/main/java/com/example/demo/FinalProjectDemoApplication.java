@@ -30,8 +30,8 @@ public class FinalProjectDemoApplication {
 						"<h1>Demo SpringBoot Application</h1>" +
 						"<p>This page was generated and deployed using Jenkins</p>" +
 						"<p>Container hostname: " + hostname + "</p>" +
+						"<p>Build: #%BUILD%</p>" +
 						"<p>Build date: %DATE%</p>" +
-						"<p>Build number: %BUILD%</p>" +
 						"</body>" +
 						"</html>";
 
