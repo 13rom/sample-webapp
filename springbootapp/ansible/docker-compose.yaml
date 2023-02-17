@@ -29,8 +29,8 @@ services:
         failure_action: rollback
         delay: 5s
       rollback_config:
-        parallelism: 0
-        order: stop-first
+        parallelism: 1
+        order: start-first
       restart_policy:
         condition: any
         delay: 5s
