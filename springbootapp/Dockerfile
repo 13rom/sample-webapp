@@ -6,11 +6,11 @@ WORKDIR /opt/demo
 
 COPY pom.xml .
 
-RUN mvn dependency:go-offline
+RUN mvn dependency:go-offline -B
 
 COPY ./src ./src
 
-RUN mvn clean install -Dmaven.test.skip=true
+RUN mvn clean install -Dmaven.test.skip=true -B
 
 
 FROM eclipse-temurin:17.0.5_8-jre-alpine
