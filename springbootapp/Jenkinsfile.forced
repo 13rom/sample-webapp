@@ -5,21 +5,11 @@ pipeline {
         WEBSERVER_HOSTNAME = "webserver.server.cx.ua"
         DOCKER_IMAGE = "13rom/simple-webapp"
     }
+    parameters {
+        string(name: 'IMAGE_TAG', description: 'Docker image tag')
+    }
 
     stages {
-        stage('Choose Tag') {
-            steps {
-                echo "================================================================================"
-                script {
-                    def imageTag = input(
-                        message: 'Please enter the Docker image tag:',
-                        parameters: [
-                        string(name: 'imageTag', defaultValue: 'latest', description: 'The name of the Docker image tag to deploy')
-                        ]
-                    )
-                }
-            }
-        }
         stage('Deploy') {
             steps{
                 echo "================================================================================"
@@ -31,11 +21,13 @@ pipeline {
                     {
                         sh 'cat hosts.ini'
                         sh 'ansible -i hosts.ini all -m ping'
-                        sh '''
-                            ansible-playbook deploy.yaml --extra-vars "DOCKER_USERNAME=${DOCKER_USERNAME}
-                                                                       DOCKER_PASSWORD=${DOCKER_PASSWORD}
-                                                                       IMAGE_NAME=${DOCKER_IMAGE}:${imageTag}"
-                        '''
+                        echo "Deploying ${DOCKER_IMAGE} image"
+                        echo "Image tag: ${params.IMAGE_TAG}"
+                        sh """
+                            ansible-playbook deploy.yaml --extra-vars \"DOCKER_USERNAME=${DOCKER_USERNAME}
+                                                                        DOCKER_PASSWORD=${DOCKER_PASSWORD}
+                                                                        IMAGE_NAME=${DOCKER_IMAGE}:${params.IMAGE_TAG}\"
+                        """
                     }
                 }
             }
