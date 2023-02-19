@@ -1,0 +1,42 @@
+pipeline {
+    agent { label 'worker' }
+
+    environment {
+        WEBSERVER_HOSTNAME = "webserver.server.cx.ua"
+    }
+
+    stages {
+        stage('Before') {
+            steps {
+                sshagent(credentials: ['webserver']) {
+                    sh '''
+                        [ -d ~/.ssh ] || mkdir ~/.ssh && chmod 0700 ~/.ssh
+                        ssh-keyscan -t rsa,dsa webserver.server.cx.ua >> ~/.ssh/known_hosts
+                        ssh ubuntu@webserver.server.cx.ua 'whoami && pwd'
+                    '''
+                    sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker stack ps demo"
+                    sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker stack services demo"
+                }
+
+            }
+        }
+        stage('Rollback') {
+            steps {
+                sshagent(credentials: ['webserver']) {
+                    sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker service update --quiet --rollback demo_webapp"
+                    sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker service ls"
+                }
+
+            }
+        }
+        stage('After') {
+            steps {
+                sshagent(credentials: ['webserver']) {
+                    sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker stack ps demo"
+                    sh "ssh ubuntu@${WEBSERVER_HOSTNAME} docker stack services demo"
+                }
+
+            }
+        }
+    }
+}
