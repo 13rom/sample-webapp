@@ -7,18 +7,30 @@
 
 version: "3.7"
 
-networks:
-  webapp-network:
-    external: false
-
 services:
+  https-portal:
+    image: steveltn/https-portal:1
+    ports:
+      - '80:80'
+      - '443:443'
+    links:
+      - webapp
+    restart: always
+    environment:
+      DOMAINS: 'webserver.server.cx.ua -> http://webapp:8080'
+      STAGE: 'production'
+      # FORCE_RENEW: 'true'
+    volumes:
+      - https-portal-data:/var/lib/https-portal
+    depends_on:
+      - webapp
+
   webapp:
     image: ${IMAGE}
+    # image: 13rom/simple-webapp:0.2.6
     hostname: virtual-server
     ports:
-      - 80:8080
-    networks:
-      - webapp-network
+      - '8080:8080'
     healthcheck:
       test: "wget --no-verbose --tries=1 --spider http://localhost:8080 || exit 1"
     deploy:
@@ -36,3 +48,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
+
+volumes:
+  https-portal-data:
